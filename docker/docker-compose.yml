@@ -1,0 +1,14 @@
+---
+version: '3'
+services:
+  ansible-inventory-server:
+    build:
+      context: .
+    container_name: ansible_inventory_server
+    tty: true
+    volumes:
+      - ./config/controller.crt:/usr/local/lib/python3.6/dist-packages/ansible_inventory_server/config/controller.crt
+      - ./config/config.yml:/usr/local/lib/python3.6/dist-packages/ansible_inventory_server/config/config.yml
+    ports:
+      - "5000:5000"
+    command: 'ansible-inventory-server'

@@ -1,0 +1,5 @@
+juju:
+  controller_endpoint: '10.0.0.1:17070'
+  model_uuid: '12345678-abcd-1234-ef05-123456789abcd'
+maas:
+  endpoint: 'http://10.0.0.2:5240/MAAS/'
