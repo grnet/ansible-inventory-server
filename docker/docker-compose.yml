@@ -11,4 +11,5 @@ services:
       - ./config/config.yml:/usr/local/lib/python3.6/dist-packages/ansible_inventory_server/config/config.yml
     ports:
       - "5000:5000"
+    restart: always
     command: 'ansible-inventory-server'
