@@ -44,6 +44,7 @@ class MaasRequestHandler(ApiRequestHandler):
 class MaasMachinesHandler(MaasRequestHandler):
     async def create_response(self, client):
         return [{
+            'system_id': m.system_id,
             'fqdn': m.fqdn,
             'hostname': m.hostname,
             'ip_addresses': m.ip_addresses,
