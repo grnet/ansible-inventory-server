@@ -1,5 +1,5 @@
 pbr!=2.1.0
-PyYAML==5.1.2
+PyYAML==4.2b4
 tornado==6.0.2
 juju==0.11.5
 python-libmaas==0.6.4
