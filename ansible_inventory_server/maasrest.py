@@ -16,82 +16,42 @@
 from collections import defaultdict
 import json
 
-from maas.client.bones import SessionAPI
+from maas.client import connect
 
 from ansible_inventory_server.utils import ApiRequestHandler
 
 
-__machines = None
-
-
-def filter_maas_machine_info(machine):
-    """Keeps only useful machine information"""
-    return {
-        'system_id': machine['system_id'],
-        'fqdn': machine['fqdn'],
-        'hostname': machine['hostname'],
-        'ip_addresses': machine['ip_addresses'],
-        'tags': machine['tag_names']
-    }
-
-
-async def get_maas_session(parameters):
-    """Returns a new MaaS session, or None if credentials are invalid"""
-    try:
-        maas_url = parameters['maas']['url']
-        maas_apikey = parameters['maas']['apikey']
-
-        _, session = await SessionAPI.connect(maas_url, apikey=maas_apikey)
-
-        return session
-    except:
-        return None
-
-
 class MaasRequestHandler(ApiRequestHandler):
-    """Extends ApiRequestHandler, adding common logic for all MaaS
-    related endpoints."""
-
-    machines = None
+    """extend the base RequestHandler class to add code shared
+    by our endpoints. Endpoints should extend this class and
+    implement the create_response() method as needed."""
 
     async def get(self):
-        session = await get_maas_session(self.json)
-        if session is None:
-            return self.api_error(400)
+        client = await connect(self.json['maas']['url'],
+                               apikey=self.json['maas']['apikey'])
+        self.write(json.dumps(await self.create_response(client), indent=4))
 
-        response = await self.create_response(session)
-        self.write(json.dumps(response, indent=4))
-
-    async def create_response(self, session):
+    async def create_response(self, client):
         """endpoints will implement this"""
         raise NotImplementedError()
 
-    async def get_machines(self, session):
-        """Returns list of MaaS machines"""
-        if MaasRequestHandler.machines is None:
-            MaasRequestHandler.machines = await session.Machines.read()
-
-        return MaasRequestHandler.machines
-
 
 class MaasMachinesHandler(MaasRequestHandler):
-    async def create_response(self, session):
-        machines = await self.get_machines(session)
-        result = []
-        for machine in machines:
-            result.append(filter_maas_machine_info(machine))
-
-        return result
+    async def create_response(self, client):
+        return [{
+            'system_id': m.system_id,
+            'fqdn': m.fqdn,
+            'hostname': m.hostname,
+            'ip_addresses': m.ip_addresses,
+            'tags': [t.name for t in m.tags],
+        } for m in await client.machines.list()]
 
 
 class MaasInventoryHandler(MaasRequestHandler):
-    async def create_response(self, session):
+    async def create_response(self, client):
         result = defaultdict(lambda: [])
-        for m in await self.get_machines(session):
-            if not m['ip_addresses']:
-                continue
-
-            for t in m['tag_names']:
-                result[t].append(m['ip_addresses'][0])
+        for m in await client.machines.list():
+            for t in m.tags:
+                result[t.name].append(m.fqdn)
 
         return result

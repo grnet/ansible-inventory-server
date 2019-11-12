@@ -31,8 +31,3 @@ class ApiRequestHandler(tornado.web.RequestHandler):
                 self._json = {}
 
         return self._json
-
-    def api_error(self, status_code):
-        """Returns empty response and specified status code"""
-        self.set_status(status_code)
-        self.write('{}')

@@ -15,42 +15,45 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import argparse
 import json
 import os
+import sys
 from urllib.request import urlopen, Request
 
 
-def maas_inventory(args):
-    """Fetches the MaaS inventory from the GRNet Ansible Inventory Server
-    and prints it to stdout"""
-
-    params = {
-        'maas': {
-            'url': args.maas_url,
-            'apikey': args.maas_apikey,
-        }
-    }
-
-    url = '{}/maas/inventory'.format(args.server)
-    res = urlopen(
-        Request(url, method='GET'), data=json.dumps(params).encode()).read()
-    print(res.decode())
-
-
 def main():
-    parser = argparse.ArgumentParser(
-        description='Script to retrieve MaaS Ansible inventory')
-    parser.add_argument('--server', required=False,
-                        default=os.getenv('GRNET_AIS_URL'))
-    parser.add_argument('--maas-url', required=False,
-                        default=os.getenv('MAAS_URL'))
-    parser.add_argument('--maas-apikey', required=False,
-                        default=os.getenv('MAAS_APIKEY'))
-    parser.add_argument('--response-params', required=False,
-                        default='{"indent": 4}')
+    try:
+        # For no arguments, or just --list, just output the inventory.
+        # This allows this script to be used as a dynamic inventory plugin.
+        if not sys.argv[1:] or sys.argv[1] == '--list':
+            # Build an Ansible inventory file from MaaS environment status
+            params = {
+                'maas': {
+                    'url': os.getenv('MAAS_URL'),
+                    'apikey': os.getenv('MAAS_APIKEY'),
+                }
+            }
 
-    maas_inventory(parser.parse_args())
+            req = Request('{}/maas/inventory'.format(os.getenv('AIS_URL')),
+                          method='GET')
+            res = urlopen(req, data=json.dumps(params).encode()).read()
+
+            inventory = json.loads(res.decode('utf-8'))
+            print(json.dumps(inventory, indent=4))
+            sys.exit(0)
+
+        elif sys.argv[1] == '--host':
+            # hostvars not supported yet, exit quickly to minimize the lookup
+            # cost
+            print(json.dumps({}))
+            sys.exit(0)
+
+        else:
+            raise Exception(
+                'Unknown argument. Please use either --list or --host')
+    except Exception as e:
+        print('Error: {}'.format(str(e)), file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == '__main__':
