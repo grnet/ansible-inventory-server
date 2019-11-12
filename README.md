@@ -97,7 +97,8 @@ Credentials created at step 1 and options `OVERWRITE` and
 next to the inventory turns to green color)
 
 ## AWX Dynamic Inventories (for MaaS)
-Similarly, create Custom Credentials with the fields: `url`, `api_key`.
+Similarly, create Custom Credentials with the fields: `url`, `api_key`
+and `ais_url`.
 
 ### AWX Inventory Script
 The provided `juju_inventory_script.py` and `maas_inventory_scripts.py`
