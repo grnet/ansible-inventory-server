@@ -13,8 +13,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from collections import defaultdict
 import json
+from collections import defaultdict
+import logging
 
 from juju.model import Model
 
@@ -45,7 +46,9 @@ async def juju_status(parameters):
             parameters.get('juju', {}).get('filters'))
 
         return json.loads(status.to_json())
-    except:
+
+    except Exception as e:
+        logging.exception(e)
         return None
 
 
