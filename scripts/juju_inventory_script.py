@@ -18,7 +18,7 @@
 import json
 import os
 import sys
-from urllib.request import urlopen
+from urllib.request import urlopen, Request
 
 
 def main():
@@ -36,8 +36,9 @@ def main():
                     'endpoint': os.getenv('JUJU_ENDPOINT')
                 }
             }
-            url = '{}/juju/inventory'.format(os.getenv('AIS_URL'))
-            res = urlopen(url, data=json.dumps(params).encode()).read()
+            req = Request('{}/juju/inventory'.format(os.getenv('AIS_URL')),
+                          method='GET')
+            res = urlopen(req, data=json.dumps(params).encode()).read()
 
             inventory = json.loads(res.decode('utf-8'))
             print(json.dumps(inventory, indent=4))
