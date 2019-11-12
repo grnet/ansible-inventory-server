@@ -138,11 +138,6 @@ class JujuInventoryHandler(JujuRequestHandler):
         return result
 
 
-class JujuStatusHandler(JujuRequestHandler):
-    def create_response(self, status):
-        return json.loads(status.to_json())
-
-
 class JujuHostsHandler(JujuRequestHandler):
     def create_response(self, status):
         return get_juju_machines(status)
@@ -158,9 +153,9 @@ class JujuNrpeMachinesHandler(JujuRequestHandler):
         juju_nrpe_machines = []
         for machine, machine_data in all_machines.items():
             for app in machine_data['apps']:
-                app_relations = status.applications.get(app, {}).get('relations', [])
+                app_data = status.applications.get(app, {})
 
-                if 'nrpe-external-master' in app_relations:
+                if 'nrpe-external-master' in (app_data.get('relations') or []):
                     juju_nrpe_machines.append(machine_data['ip_addresses'][0])
                     break
 

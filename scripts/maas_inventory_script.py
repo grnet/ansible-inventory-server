@@ -37,6 +37,7 @@ def maas_inventory(args):
         Request(url, method='GET'), data=json.dumps(params).encode()).read()
     print(res.decode())
 
+
 def main():
     parser = argparse.ArgumentParser(
         description='Script to retrieve MaaS Ansible inventory')
