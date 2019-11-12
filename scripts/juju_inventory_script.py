@@ -32,10 +32,19 @@ def main():
                     'username': os.getenv('JUJU_USERNAME'),
                     'password': os.getenv('JUJU_PASSWORD'),
                     'model_uuid': os.getenv('JUJU_MODEL_UUID'),
-                    'cacert': os.getenv('JUJU_CACERT').replace(r'\n', '\n'),
-                    'endpoint': os.getenv('JUJU_ENDPOINT')
                 }
             }
+
+            # optional parameter, Juju certificate
+            cacert = os.getenv('JUJU_CACERT')
+            if cacert is not None:
+                params['juju']['cacert'] = cacert.replace(r'\n', '\n')
+
+            # optional parameter, Juju controller endpoint
+            endpoint = os.getenv('JUJU_ENDPOINT')
+            if endpoint is not None:
+                params['juju']['endpoint'] = endpoint
+
             req = Request('{}/juju/inventory'.format(os.getenv('AIS_URL')),
                           method='GET')
             res = urlopen(req, data=json.dumps(params).encode()).read()
