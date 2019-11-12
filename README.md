@@ -62,13 +62,18 @@ $ sudo docker-compose down
 
 ## Usage
 At the moment `Ansible Inventory Server` can produce a JSON inventory
-representation of the `juju status` command. In order
-to get the JSON user should run:
+representation of the `juju status` command. Example:
 
 ```bash
-$ curl \
-      -u username:password \
-      http://<ip_or_name_of_host>:5000/juju/inventory?model_uuid=<uuid_of_juju_model>
+$ cat request_body
+{
+     "juju": {
+          "username": "admin",
+          "password": "some_safe_password",
+          "model_uuid": "aaaaaaaaa-bbbbb-cccc-ddddddd"
+     }
+}
+$ curl http://<ip_or_name_of_host>:5000/juju/inventory -XGET -d @request_body
 ```
 
 The above `username` and `password` are the user's credentials for Juju
@@ -80,10 +85,10 @@ In order to create dynamic inventories of Juju models, user should do
 the following actions:
 
 1. Create Custom Credentials (e.g. `Juju Credentials`) with the
-following fields: `username`, `password` and `model_uuid`
+following fields: `username`, `password` and `model_uuid`, `ais_url`.
 2. Add Credentials of type `Juju Credentials` to provide a valid
-combination of `username`, `password` and `model_uuid`.
-3. Create an Inventory and use the custom script juju-inventory-script
+combination of `username`, `password`, `model_uuid` and `ais_url`.
+3. Create an Inventory and use the custom script `juju-inventory-script.py`
 as a Source for the Inventory.
 4. When adding the Source to the Inventory user should use the
 Credentials created at step 1 and options `OVERWRITE` and
@@ -92,7 +97,7 @@ Credentials created at step 1 and options `OVERWRITE` and
 next to the inventory turns to green color)
 
 ## AWX Dynamic Inventories (for MaaS)
-Similarly, create Custom Credentials with the field: `api_key`.
+Similarly, create Custom Credentials with the fields: `url`, `api_key`.
 
 ### AWX Inventory Script
 The provided `juju_inventory_script.py` and `maas_inventory_scripts.py`
