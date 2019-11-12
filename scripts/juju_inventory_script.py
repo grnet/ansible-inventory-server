@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.6
+#!/usr/bin/env python3
 
 # Copyright (C) 2019  GRNET S.A.
 #
@@ -15,50 +15,51 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import base64
+import argparse
 import json
 import os
-import sys
-import urllib.request
+from urllib.request import urlopen, Request
 
-inventory_url = 'http://hostname:5000/juju/inventory'
+
+def juju_inventory(args):
+    """Fetches the Juju inventory from the GRNet Ansible Inventory Server
+    and prints it to stdout"""
+
+    params = {
+        'juju': {
+            'username': args.juju_username,
+            'password': args.juju_password,
+            'model_uuid': args.juju_model_uuid,
+            'cacert': args.juju_cacert.replace(r'\n', '\n'),
+            'endpoint': args.juju_endpoint,
+        }
+    }
+
+    url = '{}/juju/inventory'.format(args.server)
+    res = urlopen(
+        Request(url, method='GET'), data=json.dumps(params).encode()).read()
+    print(res.decode())
 
 
 def main():
-    try:
-        # For no arguments, or just --list, just output the inventory.
-        # This allows this script to be used as a dynamic inventory plugin.
-        if not sys.argv[1:] or sys.argv[1] == '--list':
-            # Build an Ansible inventory file from Juju environment status
-            username = os.getenv('JUJU_USERNAME')
-            password = os.getenv('JUJU_PASSWORD')
-            model_uuid = os.getenv('JUJU_MODEL_UUID')
+    parser = argparse.ArgumentParser(
+        description='Script to retrieve Juju Ansible inventory')
+    parser.add_argument('--server', required=False,
+                        default=os.getenv('GRNET_AIS_URL'))
+    parser.add_argument('--juju-username', required=False,
+                        default=os.getenv('JUJU_USERNAME'))
+    parser.add_argument('--juju-password', required=False,
+                        default=os.getenv('JUJU_PASSWORD'))
+    parser.add_argument('--juju-endpoint', required=False,
+                        default=os.getenv('JUJU_ENDPOINT'))
+    parser.add_argument('--juju-model-uuid', required=False,
+                        default=os.getenv('JUJU_MODEL_UUID'))
+    parser.add_argument('--juju-cacert', required=False,
+                        default=os.getenv('JUJU_CACERT'))
+    parser.add_argument('--response-params', required=False,
+                        default='{"indent": 4}')
 
-            url = '{0}?model_uuid={1}'.format(inventory_url, model_uuid)
-            req = urllib.request.Request(url)
-            credentials = '{0}:{1}'.format(username, password)
-            encoded_credentials = base64.b64encode(credentials.encode('ascii'))
-            req.add_header(
-                'Authorization',
-                'Basic {}'.format(encoded_credentials.decode('ascii')))
-            res = urllib.request.urlopen(req).read()
-
-            inventory = json.loads(res.decode('utf-8'))
-            print(json.dumps(inventory, indent=4))
-            sys.exit(0)
-
-        elif sys.argv[1] == '--host':
-            # hostvars not supported yet, exit quickly to minimize the lookup
-            # cost
-            print(json.dumps({}))
-            sys.exit(0)
-
-        else:
-            raise Exception(
-                'Unknown argument. Please use either --list or --host')
-    except Exception as e:
-        print('Error: {}'.format(str(e)), file=sys.stderr)
-        sys.exit(1)
+    juju_inventory(parser.parse_args())
 
 
 if __name__ == '__main__':
