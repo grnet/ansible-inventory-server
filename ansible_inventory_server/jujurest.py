@@ -46,13 +46,15 @@ async def juju_status(parameters):
         status = await model.get_status(
             parameters.get('juju', {}).get('filters'))
 
-        asyncio.ensure_future(model.disconnect())
-
         return json.loads(status.to_json())
 
     except Exception as e:
         logging.exception(e)
         return None
+
+    finally:
+        if model.is_connected():
+            asyncio.ensure_future(model.disconnect())
 
 
 def get_machines_ips(status):
