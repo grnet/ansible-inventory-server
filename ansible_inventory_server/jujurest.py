@@ -131,10 +131,10 @@ class JujuRequestHandler(ApiRequestHandler):
         status = await juju_status(self.json)
         if status:
             inventory = self.create_response(status)
-            self.write(json.dumps(inventory, indent=4))
+            self.json_response(inventory)
             return
 
-        self.write(json.dumps({}))
+        self.api_error(400)
 
     def create_response(self, status):
         """endpoints will implement this"""
