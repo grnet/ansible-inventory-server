@@ -16,6 +16,7 @@
 import json
 from collections import defaultdict
 import logging
+import asyncio
 
 from juju.model import Model
 
@@ -44,6 +45,8 @@ async def juju_status(parameters):
         )
         status = await model.get_status(
             parameters.get('juju', {}).get('filters'))
+
+        asyncio.ensure_future(model.disconnect())
 
         return json.loads(status.to_json())
 
