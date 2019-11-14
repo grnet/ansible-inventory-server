@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.6
+#!/usr/bin/env python3
 
 # Copyright (C) 2019  GRNET S.A.
 #
@@ -15,13 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import base64
 import json
 import os
 import sys
-import urllib.request
-
-inventory_url = 'http://hostname:5000/maas/inventory'
+from urllib.request import urlopen, Request
 
 
 def main():
@@ -29,16 +26,17 @@ def main():
         # For no arguments, or just --list, just output the inventory.
         # This allows this script to be used as a dynamic inventory plugin.
         if not sys.argv[1:] or sys.argv[1] == '--list':
-            # Get API key from AWX credentials
-            apikey = os.getenv('MAAS_APIKEY')
+            # Build an Ansible inventory file from MaaS environment status
+            params = {
+                'maas': {
+                    'url': os.getenv('MAAS_URL'),
+                    'apikey': os.getenv('MAAS_APIKEY'),
+                }
+            }
 
-            req = urllib.request.Request(inventory_url)
-            credentials = ':{0}'.format(apikey)
-            encoded_credentials = base64.b64encode(credentials.encode('ascii'))
-            req.add_header(
-                'Authorization',
-                'Basic {}'.format(encoded_credentials.decode('ascii')))
-            res = urllib.request.urlopen(req).read()
+            req = Request('{}/maas/inventory'.format(os.getenv('AIS_URL')),
+                          method='GET')
+            res = urlopen(req, data=json.dumps(params).encode()).read()
 
             inventory = json.loads(res.decode('utf-8'))
             print(json.dumps(inventory, indent=4))

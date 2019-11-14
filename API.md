@@ -7,12 +7,12 @@ Common parameters for all Juju endpoints:
 | Parameter  | Description                                                                                                                                  | Example                                   |
 |------------|----------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------|
 | filter     | Juju filter. If given, will limit results to that specific unit/app/machine. It is the equivalent of calling the CLI `juju status FILTER`    | `nova-compute`                            |
-| model_uuid | Juju model UUID                                                                                                                              | `asf76as89f7-sfasf23423-fasd2342134fasd`  |
 
-Authenticate using basic auth:
+Pass parameters using a JSON body:
 
 ```
-$ curl -u JUJU_USERNAME:JUJU_PASSWORD ...
+$ curl -XGET http://localhost:5000/juju/inventory -d \
+    '{"juju": {"username": "admin", "password": "pass"}}'
 ```
 
 *   `GET /juju/inventory`
@@ -38,10 +38,11 @@ $ curl -u JUJU_USERNAME:JUJU_PASSWORD ...
 
 ## MaaS endpoints
 
-Authenticate using basic auth (NOTE: mind the `:` before the API key):
+Pass parameters using a JSON body
 
 ```
-$ curl -u :MAAS_APIKEY ...
+$ curl -XGET http://localhost:5000/maas/inventory -d \
+    '{"maas": {"url": "https://maas.server:5240/MAAS/api/2.0", "apikey": "AAAAA:BBB:CCCC"}}'
 ```
 
 *   `GET /maas/inventory`
@@ -52,5 +53,5 @@ $ curl -u :MAAS_APIKEY ...
 
 *   `GET /maas/machines`
 
-    Returns raw MaaS machines list (in JSON format), as returned by the
+    Returns list of MaaS machines (in JSON format), as returned by the
     MaaS API

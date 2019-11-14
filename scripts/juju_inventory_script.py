@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.6
+#!/usr/bin/env python3
 
 # Copyright (C) 2019  GRNET S.A.
 #
@@ -15,13 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import base64
 import json
 import os
 import sys
-import urllib.request
-
-inventory_url = 'http://hostname:5000/juju/inventory'
+from urllib.request import urlopen, Request
 
 
 def main():
@@ -30,18 +27,27 @@ def main():
         # This allows this script to be used as a dynamic inventory plugin.
         if not sys.argv[1:] or sys.argv[1] == '--list':
             # Build an Ansible inventory file from Juju environment status
-            username = os.getenv('JUJU_USERNAME')
-            password = os.getenv('JUJU_PASSWORD')
-            model_uuid = os.getenv('JUJU_MODEL_UUID')
+            params = {
+                'juju': {
+                    'username': os.getenv('JUJU_USERNAME'),
+                    'password': os.getenv('JUJU_PASSWORD'),
+                    'model_uuid': os.getenv('JUJU_MODEL_UUID'),
+                }
+            }
 
-            url = '{0}?model_uuid={1}'.format(inventory_url, model_uuid)
-            req = urllib.request.Request(url)
-            credentials = '{0}:{1}'.format(username, password)
-            encoded_credentials = base64.b64encode(credentials.encode('ascii'))
-            req.add_header(
-                'Authorization',
-                'Basic {}'.format(encoded_credentials.decode('ascii')))
-            res = urllib.request.urlopen(req).read()
+            # optional parameter, Juju certificate
+            cacert = os.getenv('JUJU_CACERT')
+            if cacert is not None:
+                params['juju']['cacert'] = cacert.replace(r'\n', '\n')
+
+            # optional parameter, Juju controller endpoint
+            endpoint = os.getenv('JUJU_ENDPOINT')
+            if endpoint is not None:
+                params['juju']['endpoint'] = endpoint
+
+            req = Request('{}/juju/inventory'.format(os.getenv('AIS_URL')),
+                          method='GET')
+            res = urlopen(req, data=json.dumps(params).encode()).read()
 
             inventory = json.loads(res.decode('utf-8'))
             print(json.dumps(inventory, indent=4))

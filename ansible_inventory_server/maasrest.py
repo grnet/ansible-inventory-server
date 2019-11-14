@@ -19,7 +19,6 @@ import json
 from maas.client import connect
 
 from ansible_inventory_server.utils import ApiRequestHandler
-from ansible_inventory_server import settings
 
 
 class MaasRequestHandler(ApiRequestHandler):
@@ -28,12 +27,8 @@ class MaasRequestHandler(ApiRequestHandler):
     implement the create_response() method as needed."""
 
     async def get(self):
-        credentials = self.get_basic_auth(self.request.headers)
-        if credentials is None:
-            return self.write('{}')
-
-        client = await connect(settings.MAAS_ENDPOINT,
-                               apikey=credentials.password)
+        client = await connect(self.json['maas']['url'],
+                               apikey=self.json['maas']['apikey'])
         self.write(json.dumps(await self.create_response(client), indent=4))
 
     async def create_response(self, client):

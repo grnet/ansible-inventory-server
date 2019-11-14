@@ -16,6 +16,7 @@
 import json
 from collections import defaultdict
 import logging
+import asyncio
 
 from juju.model import Model
 
@@ -23,25 +24,37 @@ from ansible_inventory_server.utils import ApiRequestHandler
 from ansible_inventory_server import settings
 
 
-async def juju_status(credentials, model_uuid, filters=None):
-    """Deserialize the current Juju status."""
-    with open(settings.CACERT_PATH, 'r') as f:
-        cacert = f.read()
+async def juju_status(parameters):
+    """Returns Juju status, using the specified connection parameters.
+    Returns None on error"""
+    cacert = parameters.get('juju', {}).get('cacert')
+    if cacert is None:
+        with open(settings.CACERT_PATH, 'r') as fin:
+            cacert = fin.read()
 
-    current_model = Model()
+    model = Model()
     try:
-        await current_model.connect(
-            uuid=model_uuid if model_uuid else settings.MODEL_UUID,
-            endpoint=settings.CONTROLLER_ENDPOINT,
-            username=credentials.username,
-            password=credentials.password,
-            cacert=cacert)
+        await model.connect(
+            cacert=cacert,
+            username=parameters['juju']['username'],
+            password=parameters['juju']['password'],
+            uuid=parameters.get('juju', {}).get(
+                'model_uuid', settings.MODEL_UUID),
+            endpoint=parameters.get('juju', {}).get(
+                'endpoint', settings.JUJU_ENDPOINT)
+        )
+        status = await model.get_status(
+            parameters.get('juju', {}).get('filters'))
+
+        return json.loads(status.to_json())
+
     except Exception as e:
         logging.exception(e)
-        return {}
+        return None
 
-    status = await current_model.get_status(filters)
-    return json.loads(status.to_json())
+    finally:
+        if model.is_connected():
+            asyncio.ensure_future(model.disconnect())
 
 
 def get_machines_ips(status):
@@ -115,16 +128,11 @@ class JujuRequestHandler(ApiRequestHandler):
     implement the create_response() method as needed."""
 
     async def get(self):
-        credentials = self.get_basic_auth(self.request.headers)
-
-        filters = self.get_arguments('filter')
-        if credentials:
-            model_uuid = self.get_argument('model_uuid', None, True)
-            status = await juju_status(credentials, model_uuid, filters)
-            if status:
-                inventory = self.create_response(status)
-                self.write(json.dumps(inventory, indent=4))
-                return
+        status = await juju_status(self.json)
+        if status:
+            inventory = self.create_response(status)
+            self.write(json.dumps(inventory, indent=4))
+            return
 
         self.write(json.dumps({}))
 
