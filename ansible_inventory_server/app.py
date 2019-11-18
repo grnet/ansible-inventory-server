@@ -26,9 +26,8 @@ def make_app():
     logging.basicConfig(level='INFO')
     return tornado.web.Application([
         (r'/juju/inventory', jujurest.JujuInventoryHandler),
-        (r'/juju/hosts', jujurest.JujuHostsHandler),
         (r'/juju/status', jujurest.JujuStatusHandler),
-        (r'/juju/nrpemachines', jujurest.JujuNrpeMachinesHandler),
+        (r'/juju/machines', jujurest.JujuMachinesHandler),
         (r'/maas/machines', maasrest.MaasMachinesHandler),
         (r'/maas/inventory', maasrest.MaasInventoryHandler)
     ])
