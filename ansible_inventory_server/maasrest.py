@@ -14,7 +14,6 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from collections import defaultdict
-import json
 
 from maas.client import connect
 
@@ -27,9 +26,14 @@ class MaasRequestHandler(ApiRequestHandler):
     implement the create_response() method as needed."""
 
     async def get(self):
-        client = await connect(self.json['maas']['url'],
-                               apikey=self.json['maas']['apikey'])
-        self.write(json.dumps(await self.create_response(client), indent=4))
+        try:
+            client = await connect(self.json['maas']['url'],
+                                   apikey=self.json['maas']['apikey'])
+
+            response = await self.create_response(client)
+            self.json_response(response)
+        except:
+            self.api_error(400)
 
     async def create_response(self, client):
         """endpoints will implement this"""

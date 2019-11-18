@@ -31,3 +31,18 @@ class ApiRequestHandler(tornado.web.RequestHandler):
                 self._json = {}
 
         return self._json
+
+    def api_error(self, status_code):
+        """Returns error response with specified status code"""
+        self.set_status(status_code)
+        self.json_response({'status': status_code})
+
+    def json_response(self, data):
+        """Sends :param data: as JSON response"""
+        kwargs = self.json.get('response', {})
+        try:
+            response = json.dumps(data, **kwargs)
+        except (ValueError, TypeError):
+            response = json.dumps(data)
+
+        self.write(response)
