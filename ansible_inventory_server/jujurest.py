@@ -49,7 +49,7 @@ async def get_juju_model(parameters):
 async def get_juju_status(parameters):
     """Connects to a Juju model and returns status"""
     model = await get_juju_model(parameters)
-    if model is None:
+    if not model.is_connected():
         return None
 
     status = await model.get_status(parameters.get('juju', {}).get('filters'))
