@@ -17,16 +17,19 @@ from collections import defaultdict
 
 from maas.client.bones import SessionAPI
 
-from ansible_inventory_server.utils import ApiRequestHandler
+from ansible_inventory_server.utils import (ApiRequestHandler,
+                                            filter_ip_addresses)
 
 
-def filter_maas_machine_info(machine):
+def filter_maas_machine_info(machine, kwargs):
     """Keeps only useful machine information"""
+    ip_addresses = filter_ip_addresses(machine['ip_addresses'], kwargs)
+
     return {
         'system_id': machine['system_id'],
         'fqdn': machine['fqdn'],
         'hostname': machine['hostname'],
-        'ip_addresses': machine['ip_addresses'],
+        'ip_addresses': ip_addresses,
         'tags': machine['tag_names']
     }
 
@@ -75,7 +78,7 @@ class MaasMachinesHandler(MaasRequestHandler):
         machines = await self.get_machines(session)
         result = []
         for machine in machines:
-            result.append(filter_maas_machine_info(machine))
+            result.append(filter_maas_machine_info(machine, self.json))
 
         return result
 
@@ -84,10 +87,9 @@ class MaasInventoryHandler(MaasRequestHandler):
     async def create_response(self, session):
         result = defaultdict(lambda: [])
         for m in await self.get_machines(session):
-            if not m['ip_addresses']:
-                continue
+            ip_addresses = filter_ip_addresses(m['ip_addresses'], self.json)
 
             for t in m['tag_names']:
-                result[t].append(m['ip_addresses'][0])
+                result[t].append(ip_addresses[0])
 
         return result
