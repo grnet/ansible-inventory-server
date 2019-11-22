@@ -21,6 +21,9 @@ import sys
 from urllib.request import urlopen, Request
 
 
+SUBNET = '0.0.0.0/0'
+
+
 def main():
     try:
         # For no arguments, or just --list, just output the inventory.
@@ -32,7 +35,8 @@ def main():
                     'username': os.getenv('JUJU_USERNAME'),
                     'password': os.getenv('JUJU_PASSWORD'),
                     'model_uuid': os.getenv('JUJU_MODEL_UUID'),
-                }
+                },
+                'subnet': SUBNET
             }
 
             # optional parameter, Juju certificate
