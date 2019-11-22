@@ -24,15 +24,10 @@ $ curl -XGET http://localhost:5000/juju/inventory -d \
 
     Returns raw Juju status (in JSON format)
 
-*   `GET /juju/hosts`
+*   `GET /juju/machines`
 
-    Returns a complete list of Juju hosts, as returned by `juju status`
-
-*   `GET /juju/nrpemachines`
-
-    Returns a list of machines that have NRPE installed and are managed
-    by Juju.
-
+    Returns a comprehensive list of Juju machines, along with the
+    applications that run on each one.
 
 ---
 

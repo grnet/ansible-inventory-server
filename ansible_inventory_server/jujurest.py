@@ -13,20 +13,19 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import json
-from collections import defaultdict
-import logging
 import asyncio
+import json
 
 from juju.model import Model
+from juju.errors import JujuError
 
 from ansible_inventory_server.utils import ApiRequestHandler
 from ansible_inventory_server import settings
 
 
-async def juju_status(parameters):
-    """Returns Juju status, using the specified connection parameters.
-    Returns None on error"""
+async def get_juju_model(parameters):
+    """Returns a new juju.model.Model(), using the specified connection
+    parameters. Returns None on error"""
     cacert = parameters.get('juju', {}).get('cacert')
     if cacert is None:
         with open(settings.CACERT_PATH, 'r') as fin:
@@ -43,98 +42,75 @@ async def juju_status(parameters):
             endpoint=parameters.get('juju', {}).get(
                 'endpoint', settings.JUJU_ENDPOINT)
         )
-        status = await model.get_status(
-            parameters.get('juju', {}).get('filters'))
+    except (JujuError, KeyError):
+        pass
 
-        return json.loads(status.to_json())
+    return model
 
-    except Exception as e:
-        logging.exception(e)
+
+async def get_juju_status(parameters):
+    """Connects to a Juju model and returns status"""
+    model = await get_juju_model(parameters)
+    if not model.is_connected():
         return None
 
-    finally:
-        if model.is_connected():
-            asyncio.ensure_future(model.disconnect())
+    status = await model.get_status(parameters.get('juju', {}).get('filters'))
+    asyncio.ensure_future(model.disconnect())
+    return status
 
 
-def get_machines_ips(status):
-    machine_dict = {}
-    machines = status.get('machines', {})
-    for machine_name, machine_data in machines.items():
-        machine_addresses = machine_data.get('ip-addresses', [])
-        for address in machine_addresses:
-            if address.startswith('10.0.'):
-                machine_dict[machine_name] = address
-                break
+def juju_filter_machine_info(machine, data):
+    """Keeps only useful machine information"""
+    return {
+        'id': machine,
+        'name': data.get('display-name') or data.get('instance-id'),
+        'instance_id': data.get('instance-id'),
+        'ip_addresses': data.get('ip-addresses', []),
+        'apps': [],
+        'subordinates': [],
+        'containers': [],
+        'parent': None
+    }
+
+
+def get_juju_machines(status):
+    """Get dictionary of Juju machines."""
+    result = {}
+    for machine, machine_data in status.machines.items():
+        result[machine] = juju_filter_machine_info(machine, machine_data)
 
         containers = machine_data.get('containers', {})
-        for container_name, container_data in containers.items():
-            container_addresses = container_data.get('ip-addresses', [])
-            for address in container_addresses:
-                if address.startswith('10.0.'):
-                    machine_dict[container_name] = address
-                    break
+        for lxd, lxd_data in containers.items():
+            result[lxd] = juju_filter_machine_info(lxd, lxd_data)
 
-    return machine_dict
+            result[lxd]['parent'] = machine
+            result[machine]['containers'].append(lxd)
 
+    # update list of Juju apps and subordinate units
+    for app, app_data in status.applications.items():
+        for unit, unit_data in (app_data.get('units') or {}).items():
+            if not unit_data['machine']:
+                continue
 
-def to_inventory_object(status, machines):
-    result = {'_meta': {'hostvars': {}}}
-    model_name = status.get('model', {}).get('name')
-    apps = {}
-    applications = status.get('applications', {})
-    apps[model_name] = {'children': []}
-    for application_name, application_data in applications.items():
-        if application_data.get('units'):
-            apps[model_name]['children'].append(application_name)
-            result[application_name] = {'hosts': []}
-            for units, unit_data in application_data.get('units', {}) \
-                                                    .items():
-                if unit_data.get('machine'):
-                    host = unit_data.get('machine')
-                    try:
-                        host_address = machines[host]
-                        result['_meta']['hostvars'][host_address] = {}
-                        result[application_name]['hosts'].append(
-                            host_address)
-                    except KeyError:
-                        pass
+            result[unit_data['machine']]['apps'].append(app)
 
-    result.update(apps)
-
-    return result
-
-
-def inventory_host_units(status):
-    """returns an {'ip_address': 'unit_name'} dict"""
-    result = defaultdict(lambda: [])
-
-    apps = status.get('applications') or {}
-    for app_name, app in apps.items():
-
-        units = app.get('units') or {}
-        for unit_name, unit in units.items():
-            address = unit.get('public-address')
-
-            if address:
-                result[address].append(unit_name)
+            for sub, sub_data in (unit_data.get('subordinates') or {}).items():
+                result[unit_data['machine']]['subordinates'].append(sub)
 
     return result
 
 
 class JujuRequestHandler(ApiRequestHandler):
-    """extend the base RequestHandler class to add code shared
-    by our endpoints. Endpoints should extend this class and
-    implement the create_response() method as needed."""
+    """Extends ApiRequestHandler, adding common logic for all Juju
+    related endpoints."""
 
     async def get(self):
-        status = await juju_status(self.json)
-        if status:
-            inventory = self.create_response(status)
-            self.json_response(inventory)
-            return
+        status = await get_juju_status(self.json)
+        if not status:
+            return self.api_error(400)
 
-        self.api_error(400)
+        response = self.create_response(status)
+        self.json_response(response)
 
     def create_response(self, status):
         """endpoints will implement this"""
@@ -143,39 +119,32 @@ class JujuRequestHandler(ApiRequestHandler):
 
 class JujuInventoryHandler(JujuRequestHandler):
     def create_response(self, status):
-        machines = get_machines_ips(status)
-        return to_inventory_object(status, machines)
+        machines = get_juju_machines(status)
+
+        result = {
+            '_meta': {'hostvars': {}},
+            status.model.name: {'children': []}
+        }
+
+        for machine, machine_data in machines.items():
+            address = machine_data['ip_addresses'][0]
+
+            for app in machine_data['apps']:
+                if app not in result:
+                    result[app] = {'hosts': []}
+                    result[status.model.name]['children'].append(app)
+
+                result[app]['hosts'].append(address)
+                result['_meta']['hostvars'][address] = {}
+
+        return result
 
 
-class JujuHostsHandler(JujuRequestHandler):
+class JujuMachinesHandler(JujuRequestHandler):
     def create_response(self, status):
-        return inventory_host_units(status)
-
-
-class JujuNrpeMachinesHandler(JujuRequestHandler):
-    def create_response(self, status):
-        # get all juju machines
-        all_machines = get_machines_ips(status)
-
-        # check units. If they have a `nrpe-host` or `nrpe-container`
-        # subordinate, or they have a `nrpe-external-master` relation,
-        # then machine has Juju managed NRPE
-        juju_nrpe_machines = {}
-        for app_name, app_data in status['applications'].items():
-
-            app_has_nrpe = 'nrpe-external-master' in app_data['relations']
-            for unit_name, unit_data in (app_data.get('units') or {}).items():
-                machine_id = unit_data['machine']
-                unit_has_nrpe = any(
-                    x.startswith('nrpe-')
-                    for x in (unit_data.get('subordinates') or []))
-
-                if unit_has_nrpe or app_has_nrpe:
-                    juju_nrpe_machines[machine_id] = all_machines[machine_id]
-
-        return juju_nrpe_machines
+        return get_juju_machines(status)
 
 
 class JujuStatusHandler(JujuRequestHandler):
     def create_response(self, status):
-        return status
+        return json.loads(status.to_json())
