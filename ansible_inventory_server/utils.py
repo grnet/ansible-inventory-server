@@ -48,6 +48,7 @@ class ApiRequestHandler(tornado.web.RequestHandler):
 
         self.write(response)
 
+
 def filter_ip_addresses(ip_addresses, kwargs):
     """Given a list of @ip_addresses, choose the addresses  @kwargs['subnet'].
     If there are not any, then return the first ip_address"""
