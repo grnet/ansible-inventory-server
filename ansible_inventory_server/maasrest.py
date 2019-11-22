@@ -23,13 +23,11 @@ from ansible_inventory_server.utils import (ApiRequestHandler,
 
 def filter_maas_machine_info(machine, kwargs):
     """Keeps only useful machine information"""
-    ip_addresses = filter_ip_addresses(machine['ip_addresses'], kwargs)
-
     return {
         'system_id': machine['system_id'],
         'fqdn': machine['fqdn'],
         'hostname': machine['hostname'],
-        'ip_addresses': ip_addresses,
+        'ip_addresses': filter_ip_addresses(machine['ip_addresses'], kwargs),
         'tags': machine['tag_names']
     }
 
@@ -88,6 +86,8 @@ class MaasInventoryHandler(MaasRequestHandler):
         result = defaultdict(lambda: [])
         for m in await self.get_machines(session):
             ip_addresses = filter_ip_addresses(m['ip_addresses'], self.json)
+            if not ip_addresses:
+                continue
 
             for t in m['tag_names']:
                 result[t].append(ip_addresses[0])

@@ -21,7 +21,7 @@ import sys
 from urllib.request import urlopen, Request
 
 
-SUBNET = '0.0.0.0/0'
+DEFAULT_SUBNET = '10.0.0.0/16'
 
 
 def main():
@@ -36,7 +36,7 @@ def main():
                     'password': os.getenv('JUJU_PASSWORD'),
                     'model_uuid': os.getenv('JUJU_MODEL_UUID'),
                 },
-                'subnet': SUBNET
+                'subnet': os.getenv('SUBNET', DEFAULT_SUBNET)
             }
 
             # optional parameter, Juju certificate

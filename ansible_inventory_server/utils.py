@@ -13,6 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+from ipaddress import ip_network
 import json
 
 import tornado.web
@@ -47,26 +48,16 @@ class ApiRequestHandler(tornado.web.RequestHandler):
 
         self.write(response)
 
-
-def _ip_bits(ip):
-    """'127.0.0.1'  -->  '01111111000000000000000000000001'"""
-    ip = ip.split('/')[0]
-    return ''.join(bin(int(byte))[2:].rjust(8, '0') for byte in ip.split('.'))
-
-
-def ip_in_subnet(ip, subnet):
-    subnet_ip, length = subnet.split('/')
-    return _ip_bits(ip)[:int(length)] == _ip_bits(subnet_ip)[:int(length)]
-
-
 def filter_ip_addresses(ip_addresses, kwargs):
     """Given a list of @ip_addresses, choose the addresses  @kwargs['subnet'].
     If there are not any, then return the first ip_address"""
 
     subnet = kwargs.get('subnet')
     try:
-        result = [ip for ip in ip_addresses if ip_in_subnet(ip, subnet)]
-    except (TypeError, ValueError, IndexError, AttributeError):
+        result = [ip for ip in ip_addresses
+                  if ip_network(ip).overlaps(ip_network(subnet))]
+
+    except ValueError:
         result = ip_addresses
 
     if not result and ip_addresses and not kwargs.get('subnet_force'):
