@@ -19,7 +19,9 @@ import json
 from juju.model import Model
 from juju.errors import JujuError
 
-from ansible_inventory_server.utils import ApiRequestHandler
+from ansible_inventory_server.utils import (ApiRequestHandler,
+                                            filter_ip_addresses)
+
 from ansible_inventory_server import settings
 
 
@@ -59,13 +61,14 @@ async def get_juju_status(parameters):
     return status
 
 
-def juju_filter_machine_info(machine, data):
+def juju_filter_machine_info(machine, data, kwargs):
     """Keeps only useful machine information"""
     return {
         'id': machine,
         'name': data.get('display-name') or data.get('instance-id'),
         'instance_id': data.get('instance-id'),
-        'ip_addresses': data.get('ip-addresses', []),
+        'ip_addresses': filter_ip_addresses(data.get('ip-addresses', []),
+                                            kwargs),
         'apps': [],
         'subordinates': [],
         'containers': [],
@@ -73,15 +76,16 @@ def juju_filter_machine_info(machine, data):
     }
 
 
-def get_juju_machines(status):
+def get_juju_machines(status, kwargs):
     """Get dictionary of Juju machines."""
     result = {}
     for machine, machine_data in status.machines.items():
-        result[machine] = juju_filter_machine_info(machine, machine_data)
+        result[machine] = juju_filter_machine_info(
+            machine, machine_data, kwargs)
 
         containers = machine_data.get('containers', {})
         for lxd, lxd_data in containers.items():
-            result[lxd] = juju_filter_machine_info(lxd, lxd_data)
+            result[lxd] = juju_filter_machine_info(lxd, lxd_data, kwargs)
 
             result[lxd]['parent'] = machine
             result[machine]['containers'].append(lxd)
@@ -119,7 +123,7 @@ class JujuRequestHandler(ApiRequestHandler):
 
 class JujuInventoryHandler(JujuRequestHandler):
     def create_response(self, status):
-        machines = get_juju_machines(status)
+        machines = get_juju_machines(status, self.json)
 
         result = {
             '_meta': {'hostvars': {}},
@@ -127,6 +131,9 @@ class JujuInventoryHandler(JujuRequestHandler):
         }
 
         for machine, machine_data in machines.items():
+            if not machine_data['ip_addresses']:
+                continue
+
             address = machine_data['ip_addresses'][0]
 
             for app in machine_data['apps']:
@@ -142,7 +149,7 @@ class JujuInventoryHandler(JujuRequestHandler):
 
 class JujuMachinesHandler(JujuRequestHandler):
     def create_response(self, status):
-        return get_juju_machines(status)
+        return get_juju_machines(status, self.json)
 
 
 class JujuStatusHandler(JujuRequestHandler):

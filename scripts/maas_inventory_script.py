@@ -21,6 +21,9 @@ import sys
 from urllib.request import urlopen, Request
 
 
+DEFAULT_SUBNET = '10.0.0.0/16'
+
+
 def main():
     try:
         # For no arguments, or just --list, just output the inventory.
@@ -31,7 +34,8 @@ def main():
                 'maas': {
                     'url': os.getenv('MAAS_URL'),
                     'apikey': os.getenv('MAAS_APIKEY'),
-                }
+                },
+                'subnet': os.getenv('SUBNET', DEFAULT_SUBNET)
             }
 
             req = Request('{}/maas/inventory'.format(os.getenv('AIS_URL')),
