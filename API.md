@@ -1,5 +1,13 @@
 # Ansible Inventory Server API
 
+## Common parameters for all endpoints
+
+| Parameter    | Type          | Description                                                                                                                                                                            | Example          |
+|--------------|---------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------|
+| subnet       | String        | For machines with multiple IP addresses, return the addresses of a specific subnet only. If machine has no IP address on this subnet, then one of its IP addresses is chosen at random | `"10.0.0.0/16"`  |
+| subnet_force | Boolean       | Ignore machines that have no IP addresses in the specified `subnet`                                                                                                                    | `true`           |
+
+
 ## Juju endpoints
 
 Common parameters for all Juju endpoints:
