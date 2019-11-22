@@ -17,6 +17,7 @@ import asyncio
 import json
 
 from juju.model import Model
+from juju.errors import JujuError
 
 from ansible_inventory_server.utils import ApiRequestHandler
 from ansible_inventory_server import settings
@@ -41,9 +42,10 @@ async def get_juju_model(parameters):
             endpoint=parameters.get('juju', {}).get(
                 'endpoint', settings.JUJU_ENDPOINT)
         )
-        return model
-    except:
-        return None
+    except (JujuError, KeyError):
+        pass
+
+    return model
 
 
 async def get_juju_status(parameters):
