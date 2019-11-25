@@ -28,7 +28,8 @@ def filter_maas_machine_info(machine, kwargs):
         'fqdn': machine['fqdn'],
         'hostname': machine['hostname'],
         'ip_addresses': filter_ip_addresses(machine['ip_addresses'], kwargs),
-        'tags': machine['tag_names']
+        'tags': machine['tag_names'],
+        'parent': (machine.get('pod') or {}).get('name')
     }
 
 
@@ -45,11 +46,23 @@ async def get_maas_session(parameters):
         return None
 
 
+class MaasMachines(object):
+    """Cache and serve list of MaaS machines"""
+    cached = None
+
+    @staticmethod
+    async def get(session, params):
+        """Returns list of MaaS machines"""
+        nocache = (params.get('maas') or {}).get('no_cache', False)
+        if MaasMachines.cached is None or nocache:
+            MaasMachines.cached = await session.Machines.read()
+
+        return MaasMachines.cached
+
+
 class MaasRequestHandler(ApiRequestHandler):
     """Extends ApiRequestHandler, adding common logic for all MaaS
     related endpoints."""
-
-    machines = None
 
     async def get(self):
         session = await get_maas_session(self.json)
@@ -63,17 +76,10 @@ class MaasRequestHandler(ApiRequestHandler):
         """endpoints will implement this"""
         raise NotImplementedError()
 
-    async def get_machines(self, session):
-        """Returns list of MaaS machines"""
-        if MaasRequestHandler.machines is None:
-            MaasRequestHandler.machines = await session.Machines.read()
-
-        return MaasRequestHandler.machines
-
 
 class MaasMachinesHandler(MaasRequestHandler):
     async def create_response(self, session):
-        machines = await self.get_machines(session)
+        machines = await MaasMachines.get(session, self.json)
         result = []
         for machine in machines:
             result.append(filter_maas_machine_info(machine, self.json))
@@ -84,7 +90,7 @@ class MaasMachinesHandler(MaasRequestHandler):
 class MaasInventoryHandler(MaasRequestHandler):
     async def create_response(self, session):
         result = defaultdict(lambda: [])
-        for m in await self.get_machines(session):
+        for m in await MaasMachines.get(session, self.json):
             ip_addresses = filter_ip_addresses(m['ip_addresses'], self.json)
             if not ip_addresses:
                 continue
