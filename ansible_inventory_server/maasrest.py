@@ -80,6 +80,10 @@ class MaasRequestHandler(ApiRequestHandler):
 class MaasMachinesHandler(MaasRequestHandler):
     async def create_response(self, session):
         machines = await MaasMachines.get(session, self.json)
+
+        if (self.json.get('maas') or {}).get('raw'):
+            return machines
+
         result = []
         for machine in machines:
             result.append(filter_maas_machine_info(machine, self.json))
