@@ -21,7 +21,6 @@ from ansible_inventory_server.utils import (ApiRequestHandler,
                                             filter_ip_addresses)
 
 
-
 def maas_filter_ip_addresses(data, kwargs):
     """Filters IP addresses using network interface name and/or subnet"""
 
@@ -41,6 +40,7 @@ def maas_filter_ip_addresses(data, kwargs):
         pass
 
     return filter_ip_addresses(ip_addresses, kwargs)
+
 
 def filter_maas_machine_info(machine, kwargs):
     """Keeps only useful machine information"""
