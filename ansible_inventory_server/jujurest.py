@@ -64,17 +64,20 @@ async def get_juju_status(parameters):
 def juju_filter_ip_addresses(data, kwargs):
     """Filters IP addresses using network interface name and/or subnet"""
 
-    all_ips = data.get('ip-addresses', [])
+    ip_addresses = []
 
     try:
-        inet_name = kwargs.get('interface')
-        if inet_name:
-            inet_ips = data['network-interfaces'][inet_name]['ip-addresses']
-            all_ips = list(set(all_ips).intersection(set(inet_ips)))
+        interface_filter = kwargs.get('interface')
+        for interface, interface_data in data['network-interfaces']:
+            if interface_filter and interface != interface_filter:
+                continue
+
+            ip_addresses.extend(interface_data.get('ip-addresses') or [])
+
     except (KeyError, ValueError):
         pass
 
-    return filter_ip_addresses(all_ips, kwargs)
+    return filter_ip_addresses(ip_addresses, kwargs)
 
 
 def juju_filter_machine_info(machine, data, kwargs):

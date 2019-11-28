@@ -25,24 +25,22 @@ from ansible_inventory_server.utils import (ApiRequestHandler,
 def maas_filter_ip_addresses(data, kwargs):
     """Filters IP addresses using network interface name and/or subnet"""
 
-    all_ips = data.get('ip_addresses', [])
+    ip_addresses = []
 
     try:
-        inet_name = kwargs.get('interface')
-        if inet_name:
-            for interface in data['interface_set']:
-                if interface['name'] == inet_name:
-                    links = interface.get('links') or []
-                    links += interface.get('discovered') or []
-                    inet_ips = [link['ip_address'] for link in links]
-                    break
+        interface_filter = kwargs.get('interface')
+        for interface in data['interface_set']:
+            if interface_filter and interface['name'] != interface_filter:
+                continue
 
-        all_ips = list(set(all_ips).intersection(set(inet_ips)))
+            links = interface.get('links') or []
+            links += interface.get('discovered') or []
+            ip_addresses.extend([link['ip_address'] for link in links])
 
     except (KeyError, NameError):
         pass
 
-    return filter_ip_addresses(all_ips, kwargs)
+    return filter_ip_addresses(ip_addresses, kwargs)
 
 def filter_maas_machine_info(machine, kwargs):
     """Keeps only useful machine information"""
