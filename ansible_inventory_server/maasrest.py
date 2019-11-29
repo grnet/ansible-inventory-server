@@ -46,18 +46,9 @@ async def get_maas_session(parameters):
         return None
 
 
-class MaasMachines(object):
-    """Cache and serve list of MaaS machines"""
-    cached = None
-
-    @staticmethod
-    async def get(session, params):
-        """Returns list of MaaS machines"""
-        nocache = (params.get('maas') or {}).get('no_cache', False)
-        if MaasMachines.cached is None or nocache:
-            MaasMachines.cached = await session.Machines.read()
-
-        return MaasMachines.cached
+async def get_maas_machines(session):
+    """Returns list of MaaS machines"""
+    return await session.Machines.read()
 
 
 class MaasRequestHandler(ApiRequestHandler):
@@ -79,7 +70,7 @@ class MaasRequestHandler(ApiRequestHandler):
 
 class MaasMachinesHandler(MaasRequestHandler):
     async def create_response(self, session):
-        machines = await MaasMachines.get(session, self.json)
+        machines = await get_maas_machines(session)
 
         if (self.json.get('maas') or {}).get('raw'):
             return machines
@@ -94,7 +85,7 @@ class MaasMachinesHandler(MaasRequestHandler):
 class MaasInventoryHandler(MaasRequestHandler):
     async def create_response(self, session):
         result = defaultdict(lambda: [])
-        for m in await MaasMachines.get(session, self.json):
+        for m in await get_maas_machines(session):
             ip_addresses = filter_ip_addresses(m['ip_addresses'], self.json)
             if not ip_addresses:
                 continue
