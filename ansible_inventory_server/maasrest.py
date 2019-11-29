@@ -21,14 +21,15 @@ from ansible_inventory_server.utils import (ApiRequestHandler,
                                             filter_ip_addresses)
 
 
-def maas_filter_ip_addresses(data, kwargs):
-    """Filters IP addresses using network interface name and/or subnet"""
+def maas_filter_ip_addresses(interface_set, kwargs):
+    """Filters IP addresses from a MaaS interface set, optionally with
+    interface name and subnet."""
 
     ip_addresses = []
 
     try:
         interface_filter = kwargs.get('interface')
-        for interface in data['interface_set']:
+        for interface in interface_set:
             if interface_filter and interface['name'] != interface_filter:
                 continue
 
@@ -48,7 +49,8 @@ def filter_maas_machine_info(machine, kwargs):
         'system_id': machine['system_id'],
         'fqdn': machine['fqdn'],
         'hostname': machine['hostname'],
-        'ip_addresses': maas_filter_ip_addresses(machine, kwargs),
+        'ip_addresses': maas_filter_ip_addresses(
+            machine['interface_set'], kwargs),
         'tags': machine['tag_names'],
         'parent': (machine.get('pod') or {}).get('name')
     }
@@ -107,7 +109,8 @@ class MaasInventoryHandler(MaasRequestHandler):
     async def create_response(self, session):
         result = defaultdict(lambda: [])
         for m in await get_maas_machines(session):
-            ip_addresses = maas_filter_ip_addresses(m, self.json)
+            ip_addresses = maas_filter_ip_addresses(
+                m['interface_set'], self.json)
             if not ip_addresses:
                 continue
 
