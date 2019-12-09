@@ -1,109 +1,63 @@
 # Ansible Inventory Server
+
 Ansible Inventory Server is an easily extensible lightweight server
 which can create dynamic Ansible Inventories from Juju and MaaS data
 sources.
 
+## Features
+
+* Rest API for creating dynamic Ansible inventories from MaaS or Juju
+  data sources.
+* Inventory scripts for Ansible and AWX (`scripts/`)
+* Rest API for retrieving machine information for MaaS and Juju machines
+
+Extended documentation for the API can be found at [API.md](./API.md)
+
 ## Deployment
-The deployment of the Server is as easy as a click of a button. The
-provided docker-compose does all the appropriate actions to deploy the
-server inside a container and make it available through a host port.
 
-### Prerequisites
-In order to deploy the server then docker and docker-compose must be
-installed.
-
-Furthermore, you should create a proper `config.yml` file with Juju and
-MaaS server info:
+You can deploy the server using docker-compose. First, create a config
+file with Juju and MaaS server information:
 
 ```bash
 $ cp docker/config.yml.sample docker/config.yml
 $ vim docker/config.yml
 ```
 
-#### Install Docker
-To install Docker on Ubuntu you should run the following commands:
+Then, deploy the server with:
 
 ```bash
-$ sudo apt-get update
-$ curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-$ sudo add-apt-repository \
-     "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
-     $(lsb_release -cs) \
-     stable"
-$ sudo apt-get update
-$ sudo apt-get install -y docker-ce docker-ce-cli containerd.io
-$ sudo docker run hello-world
+$ cd docker
+$ docker-compose up -d
 ```
 
-#### Install docker-compose
-To install docker-compose on Ubuntu you should run the following
-commands:
+The server should be available at `localhost:5000`.
 
-```bash
-$ sudo curl \
-     -L "https://github.com/docker/compose/releases/download/1.24.0/docker-compose-$(uname -s)-$(uname -m)" \
-     -o /usr/local/bin/docker-compose
-$ sudo chmod +x /usr/local/bin/docker-compose
-$ docker-compose --version
-```
+## AWX Dynamic Inventory (for Juju)
 
-### Instructions
-To deploy the server you should run:
+The following steps are required for creating a dynamic AWX inventory for
+Juju machines:
 
-```bash
-$ sudo docker-compose up -d
-```
+- Under tab "Credential Types", create a new type of credentials. Choose
+  "Juju Credentials" as name. Use [this Input Configuration][1] and
+  [this Injector Configuration][2]. Save the new credentials type.
+- Under "Resources/Credentials", create new credentials of type
+  "Juju Credentials". Fill in with the information of your Juju deployment.
+- Under "Resources/Inventory Scripts" create a new inventory script, and in
+  the "Custom Script" section paste the contents of [the inventory script][3].
+- Optionally, edit the script file to suit your specific deployment needs.
+- Under "Resources/Inventories" create a new Inventory.
+- Open the new inventory, go to the "Sources" tab, and click add. Choose
+  "Custom Script" as inventory source type. Choose your inventory script, and
+  include the Juju Credentials you created on the second step.
+- Save configuration, then click Refresh. You should be seeing your Juju
+  machines appearing under your Inventory.
 
-To teardown the server you should run:
+You are now able to use this Inventory in order to execute your
+Ansible Playbooks.
 
-```bash
-$ sudo docker-compose down
-```
+The process for MaaS machines is the same. Simple use the appropriate MaaS
+files instead.
 
-## Usage
-At the moment `Ansible Inventory Server` can produce a JSON inventory
-representation of the `juju status` command. Example:
-
-```bash
-$ cat request_body
-{
-     "juju": {
-          "username": "admin",
-          "password": "some_safe_password",
-          "model_uuid": "aaaaaaaaa-bbbbb-cccc-ddddddd"
-     }
-}
-$ curl http://<ip_or_name_of_host>:5000/juju/inventory -XGET -d @request_body
-```
-
-The above `username` and `password` are the user's credentials for Juju
-and `model_uuid` is the uuid of the Juju model user wants to acquire
-information from.
-
-## AWX Dynamic Inventories (for Juju)
-In order to create dynamic inventories of Juju models, user should do
-the following actions:
-
-1. Create Custom Credentials (e.g. `Juju Credentials`) with the
-following fields: `username`, `password` and `model_uuid`, `ais_url`.
-2. Add Credentials of type `Juju Credentials` to provide a valid
-combination of `username`, `password`, `model_uuid` and `ais_url`.
-3. Create an Inventory and use the custom script `juju-inventory-script.py`
-as a Source for the Inventory.
-4. When adding the Source to the Inventory user should use the
-Credentials created at step 1 and options `OVERWRITE` and
-`UPDATE ON LAUNCH`.
-5. Sync the Inventory and confirm that the action succeeded (cloud icon
-next to the inventory turns to green color)
-
-## AWX Dynamic Inventories (for MaaS)
-Similarly, create Custom Credentials with the fields: `url`, `api_key`
-and `ais_url`.
-
-### AWX Inventory Script
-The provided `juju_inventory_script.py` and `maas_inventory_scripts.py`
-are the scripts which AWX runs to create dynamic inventories.
-
-### API Documentation
-The API contains the inventory as well as a few others misc endpoints.
-Refer to [API.md](./API.md) for details.
+[1]: ./awx/creds_juju_input.yaml "Juju Credentials Input Configuration"
+[2]: ./awx/creds_juju_injector.yaml "Juju Credentials Injector Configuration"
+[3]: ./scripts/juju_inventory_script.py "Juju Credentials Injector Configuration"

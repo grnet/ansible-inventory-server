@@ -1,0 +1,15 @@
+fields:
+  - id: username
+    type: string
+    label: Juju username
+  - id: password
+    type: string
+    label: Juju password
+    secret: true
+  - id: model_uuid
+    type: string
+    label: Juju model UUID
+required:
+  - username
+  - password
+  - model_uuid

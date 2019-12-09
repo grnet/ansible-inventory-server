@@ -1,0 +1,4 @@
+env:
+  JUJU_MODEL_UUID: '{{ model_uuid }}'
+  JUJU_PASSWORD: '{{ password }}'
+  JUJU_USERNAME: '{{ username }}'
