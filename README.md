@@ -13,6 +13,11 @@ sources.
 
 Extended documentation for the API can be found at [API.md](./API.md)
 
+## Requirements
+
+* [Docker](https://docs.docker.com/install/)
+* [Docker Compose](https://docs.docker.com/compose/install/)
+
 ## Deployment
 
 You can deploy the server using docker-compose. First, create a config
@@ -37,25 +42,24 @@ The server should be available at `localhost:5000`.
 The following steps are required for creating a dynamic AWX inventory for
 Juju machines:
 
-- Under tab "Credential Types", create a new type of credentials. Choose
-  "Juju Credentials" as name. Use [this Input Configuration][1] and
+- Under tab `Credential Types`, create a new type of credentials. Choose
+  `Juju Credentials` as name. Use [this Input Configuration][1] and
   [this Injector Configuration][2]. Save the new credentials type.
-- Under "Resources/Credentials", create new credentials of type
-  "Juju Credentials". Fill in with the information of your Juju deployment.
-- Under "Resources/Inventory Scripts" create a new inventory script, and in
-  the "Custom Script" section paste the contents of [the inventory script][3].
+- Under `Resources/Credentials`, create new credentials of type
+  `Juju Credentials`. Fill in with the information of your Juju deployment.
+- Under `Resources/Inventory Scripts` create a new inventory script, and in
+  the `Custom Script` section paste the contents of [the inventory script][3].
 - Optionally, edit the script file to suit your specific deployment needs.
-- Under "Resources/Inventories" create a new Inventory.
-- Open the new inventory, go to the "Sources" tab, and click add. Choose
-  "Custom Script" as inventory source type. Choose your inventory script, and
+- Under `Resources/Inventories` create a new Inventory.
+- Open the new inventory, go to the `Sources` tab, and click add. Choose
+  `Custom Script` as inventory source type. Choose your inventory script, and
   include the Juju Credentials you created on the second step.
 - Save configuration, then click Refresh. You should be seeing your Juju
   machines appearing under your Inventory.
 
-You are now able to use this Inventory in order to execute your
-Ansible Playbooks.
+You are now able to use this inventory with your Ansible Playbooks.
 
-The process for MaaS machines is the same. Simple use the appropriate MaaS
+The process for MaaS machines is the same. Simply use the appropriate MaaS
 files instead.
 
 [1]: ./awx/creds_juju_input.yaml "Juju Credentials Input Configuration"

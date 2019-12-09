@@ -1,6 +1,6 @@
 # Ansible Inventory Server API
 
-<details><summary><b>Parameters</b></summary>
+<details open><summary><b>Parameters</b></summary>
 
 ### Passing Parameters
 
@@ -8,7 +8,7 @@ The API accepts JSON request body parameters. Example (see below for list
 of available parameters):
 
 ```
-$ cat request
+$ cat request.json
 {
     "response": {"indent": 4},
     "juju": {
@@ -19,7 +19,7 @@ $ cat request
     }
 }
 $ curl -XGET https://ansible-inventory-server:port/juju/inventory \
-    --data-binary @request
+    --data-binary @request.json
 ```
 
 ### List of common parameters
@@ -39,7 +39,7 @@ These parameters work for all endpoints below:
 
 ---
 
-<details><summary><b>Juju endpoints</b></summary>
+<details open><summary><b>Juju endpoints</b></summary>
 
 ### Parameters
 
@@ -100,9 +100,8 @@ $ curl -d '{"juju": {"username": "user", "password": "pass", "filters": ["nova-c
 
 *   `GET /juju/machines`
 
-    Returns a complete of list of Juju machines (and containers), along with
-    information regarding what is running on top of them (apps, subordinate
-    units, containers).
+    Returns a complete list of Juju machines (and containers), along with
+    information regarding their running apps, subordinate units and containers.
 
     <details><summary>Example response:</summary>
 
@@ -153,7 +152,7 @@ $ curl -d '{"juju": {"username": "user", "password": "pass", "filters": ["nova-c
 
 ---
 
-<details>
+<details open>
 <summary><b>MaaS endpoints</b>
 </summary>
 
@@ -200,7 +199,7 @@ $ curl -d '{"juju": {"username": "user", "password": "pass", "filters": ["nova-c
     |-------------------|---------|----------|----------|----------------------------------------------------|
     | `maas.raw`        | Boolean | NO       | `true`   | Return raw response, as returned from the MaaS API |
 
-    Returns list of MaaS machines, along with basic information about them
+    Returns list of MaaS machines, along with basic information about them.
 
     <details><summary>Example:</summary>
 
