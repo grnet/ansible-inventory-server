@@ -18,8 +18,7 @@ import logging
 import tornado.web
 import tornado.ioloop
 
-from ansible_inventory_server import jujurest
-from ansible_inventory_server import maasrest
+from ansible_inventory_server import jujurest, maasrest, aisrest
 
 
 def make_app():
@@ -29,7 +28,8 @@ def make_app():
         (r'/juju/status', jujurest.JujuStatusHandler),
         (r'/juju/machines', jujurest.JujuMachinesHandler),
         (r'/maas/machines', maasrest.MaasMachinesHandler),
-        (r'/maas/inventory', maasrest.MaasInventoryHandler)
+        (r'/maas/inventory', maasrest.MaasInventoryHandler),
+        (r'/ais/machines', aisrest.AisInventoryHandler)
     ])
 
 
