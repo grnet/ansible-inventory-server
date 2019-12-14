@@ -1,0 +1,11 @@
+fields:
+  - id: apikey
+    type: string
+    label: MaaS API key
+    secret: true
+  - id: url
+    type: string
+    label: MaaS API URL
+required:
+  - apikey
+  - url
