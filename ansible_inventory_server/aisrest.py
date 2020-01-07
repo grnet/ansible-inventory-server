@@ -23,7 +23,7 @@ def _has_cluster_relations(relations):
         'ha', 'cluster', 'peer', 'compute-peer', 'replica-set'])
 
 
-class AisInventoryHandler(ApiRequestHandler):
+class AisMachinesHandler(ApiRequestHandler):
     async def get(self):
         self.machines = []
         if not await self.scrape_juju() or not await self.scrape_maas():

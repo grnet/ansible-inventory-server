@@ -29,7 +29,7 @@ def make_app():
         (r'/juju/machines', jujurest.JujuMachinesHandler),
         (r'/maas/machines', maasrest.MaasMachinesHandler),
         (r'/maas/inventory', maasrest.MaasInventoryHandler),
-        (r'/ais/machines', aisrest.AisInventoryHandler)
+        (r'/ais/machines', aisrest.AisMachinesHandler)
     ])
 
 
