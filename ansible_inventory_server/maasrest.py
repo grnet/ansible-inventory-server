@@ -52,7 +52,7 @@ def filter_maas_machine_info(machine, kwargs):
         'ip_addresses': maas_filter_ip_addresses(
             machine['interface_set'], kwargs),
         'tags': machine['tag_names'],
-        'parent': (machine.get('pod') or {}).get('name')
+        'pod': (machine.get('pod') or {}).get('name')
     }
 
 

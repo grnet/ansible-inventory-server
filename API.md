@@ -221,7 +221,7 @@ $ curl -d '{"juju": {"username": "user", "password": "pass", "filters": ["nova-c
                 "tag1",
                 "tag2"
             ],
-            "parent": "gf782"               /* parent system id */
+            "pod": "gf782"               /* parent system id */
         },
         {
             "fqdn": "HOST_2.DOMAIN_EXT",
@@ -235,7 +235,7 @@ $ curl -d '{"juju": {"username": "user", "password": "pass", "filters": ["nova-c
                 "tag2",
                 "tag3"
             ],
-            "parent": null                  /* bare metal server */
+            "pod": null                  /* bare metal server */
         }
     ]
     ```
