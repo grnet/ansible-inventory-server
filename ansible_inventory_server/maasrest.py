@@ -65,7 +65,7 @@ async def get_maas_session(parameters):
         _, session = await SessionAPI.connect(maas_url, apikey=maas_apikey)
 
         return session
-    except:
+    except Exception:
         return None
 
 
