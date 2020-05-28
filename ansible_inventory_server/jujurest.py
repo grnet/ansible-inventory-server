@@ -22,27 +22,19 @@ from juju.errors import JujuError
 from ansible_inventory_server.utils import (ApiRequestHandler,
                                             filter_ip_addresses)
 
-from ansible_inventory_server import settings
-
 
 async def get_juju_model(parameters):
     """Returns a new juju.model.Model(), using the specified connection
     parameters. Returns None on error"""
-    cacert = parameters.get('juju', {}).get('cacert')
-    if cacert is None:
-        with open(settings.CACERT_PATH, 'r') as fin:
-            cacert = fin.read()
 
     model = Model()
     try:
         await model.connect(
-            cacert=cacert,
+            cacert=parameters['juju']['cacert'],
             username=parameters['juju']['username'],
             password=parameters['juju']['password'],
-            uuid=parameters.get('juju', {}).get(
-                'model_uuid', settings.MODEL_UUID),
-            endpoint=parameters.get('juju', {}).get(
-                'endpoint', settings.JUJU_ENDPOINT)
+            uuid=parameters['juju']['model_uuid'],
+            endpoint=parameters['juju']['endpoint'],
         )
     except (JujuError, KeyError):
         pass
@@ -52,6 +44,7 @@ async def get_juju_model(parameters):
 
 async def get_juju_status(parameters):
     """Connects to a Juju model and returns status"""
+
     model = await get_juju_model(parameters)
     if not model.is_connected():
         return None
@@ -83,6 +76,7 @@ def juju_filter_ip_addresses(interfaces, kwargs):
 
 def juju_filter_machine_info(machine, data, kwargs):
     """Keeps only useful machine information"""
+
     return {
         'id': machine,
         'name': data.get('display-name') or data.get('instance-id'),
@@ -97,7 +91,8 @@ def juju_filter_machine_info(machine, data, kwargs):
 
 
 def get_juju_machines(status, kwargs):
-    """Get dictionary of Juju machines."""
+    """Gets dictionary of Juju machines."""
+
     result = {}
     for machine, machine_data in status.machines.items():
         result[machine] = juju_filter_machine_info(

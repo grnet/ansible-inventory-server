@@ -20,15 +20,7 @@ Extended documentation for the API can be found at [API.md](./API.md)
 
 ## Deployment
 
-You can deploy the server using docker-compose. First, create a config
-file with Juju and MaaS server information:
-
-```bash
-$ cp docker/config.yml.sample docker/config.yml
-$ vim docker/config.yml
-```
-
-Then, deploy the server with:
+You can deploy the server using docker-compose with:
 
 ```bash
 $ cd docker

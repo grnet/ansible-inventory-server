@@ -7,7 +7,9 @@
 The API accepts JSON request body parameters. Example (see below for list
 of available parameters):
 
-```
+> **NOTE:** `cacert` has to be in one line with `\n` characters for every line change.
+
+```bash
 $ cat request.json
 {
     "response": {"indent": 4},
@@ -15,7 +17,8 @@ $ cat request.json
         "endpoint": "1.2.3.4:17070",
         "username": "some_username",
         "password": "some_password",
-        "model_uuid": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+        "model_uuid": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+        "cacert": "-----BEGIN CERTIFICATE-----\n<content of Juju certificate>\n-----END CERTIFICATE-----\n"
     }
 }
 $ curl -XGET https://ansible-inventory-server:port/juju/inventory \
@@ -47,12 +50,10 @@ These parameters work for all endpoints below:
 |-------------------|--------|----------|---------------------------------------|---------------------------------------------------|
 | `juju.username`   | String | YES      | `"admin"`                             | Juju username                                     |
 | `juju.password`   | String | YES      | `"some_password"`                     | Juju password                                     |
-| `juju.endpoint`   | String | NO (*)   | `"https://10.0.0.1:17070"`            | Juju controller endpoint                          |
-| `juju.cacert`     | String | NO (*)   | `"<contents of Juju certificate>"`    | Certificate for connecting to the Juju controller |
-| `juju.model_uuid` | String | NO (*)   | `"aaaaaa-bbbbb-cccccc-dddd-eeeeeee"`  | Juju model UUID to connect to                     |
+| `juju.endpoint`   | String | YES      | `"https://10.0.0.1:17070"`            | Juju controller endpoint                          |
+| `juju.cacert`     | String | YES      | `"<content of Juju certificate>"`     | Certificate for connecting to the Juju controller |
+| `juju.model_uuid` | String | YES      | `"aaaaaa-bbbbb-cccccc-dddd-eeeeeee"`  | Juju model UUID to connect to                     |
 | `juju.filters`    | List   | NO       | `["nova-compute", "keystone"]`        | List of filters for Juju applications/hosts/units |
-
-`(*)`: If missing, the default ones from the server config.yml file are used instead
 
 Example passing Juju credentials:
 
