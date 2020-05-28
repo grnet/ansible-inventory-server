@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ansible-inventory-server-service
+spec:
+  selector:
+    app: ansible-inventory-server
+  ports:
+  - name: http
+    protocol: TCP
+    port: 5000
+    targetPort: 5000
+  type: LoadBalancer
