@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ansible-inventory-server-deployment
+  labels:
+    app: ansible-inventory-server
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: ansible-inventory-server
+  template:
+    metadata:
+      labels:
+        app: ansible-inventory-server
+    spec:
+{{- include "ansibleInventoryServer.imagePullSecrets" . | indent 6 }}
+      dnsConfig:
+        options:
+        - name: ndots
+          value: "1"
+      containers:
+      - name: ansible-inventory-server
+        image: {{ include "ansibleInventoryServer.image" . }}
+        imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
+        command: ["ansible-inventory-server"]
+        ports:
+        - containerPort: 5000

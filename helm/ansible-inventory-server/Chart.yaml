@@ -1,0 +1,15 @@
+apiVersion: v2
+name: ansible-inventory-server
+version: 1.0.1
+appVersion: 1.0.0
+description: Chart for Ansible Inventory Server, a tool for Ansible dynamic inventories from MaaS and Juju.
+keywords:
+  - ansible
+  - maas
+  - juju
+home: https://grnet.gr
+sources:
+  - https://github.com/grnet/ansible-inventory-server
+maintainers:
+  - name: Stamatis Katsaounis
+    email: skatsaounis@admin.grnet.gr
