@@ -21,8 +21,8 @@ spec:
           value: "1"
       containers:
       - name: ansible-inventory-server
-        image: {{ include "ansibleInventoryServer.ansibleInventoryServerImage" . }}
-        imagePullPolicy: {{ .Values.ansibleInventoryServerImage.pullPolicy | quote }}
+        image: {{ include "ansibleInventoryServer.image" . }}
+        imagePullPolicy: {{ .Values.image.pullPolicy | quote }}
         command: ["ansible-inventory-server"]
         ports:
         - containerPort: 5000
