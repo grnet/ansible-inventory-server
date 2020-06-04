@@ -1,4 +1,8 @@
 env:
+  AIS_URL: '{{ ais_url }}'
+  JUJU_CACERT: '{{ cacert }}'
+  JUJU_ENDPOINT: '{{ endpoint }}'
   JUJU_MODEL_UUID: '{{ model_uuid }}'
   JUJU_PASSWORD: '{{ password }}'
+  JUJU_SUBNET: '{{ subnet }}'
   JUJU_USERNAME: '{{ username }}'
