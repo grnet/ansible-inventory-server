@@ -1,15 +1,32 @@
 fields:
-  - id: username
+  - id: ais_url
     type: string
-    label: Juju username
+    label: Ansible Inventory Server URL
+  - id: cacert
+    type: string
+    label: Juju Controller Cacert
+    multiline: true
+  - id: endpoint
+    type: string
+    label: Juju Controller Endpoint
+  - id: model_uuid
+    type: string
+    label: Juju model UUID
   - id: password
     type: string
     label: Juju password
     secret: true
-  - id: model_uuid
+  - id: subnet
     type: string
-    label: Juju model UUID
+    label: Juju model subnet to be used for Inventory
+  - id: username
+    type: string
+    label: Juju username
 required:
-  - username
-  - password
+  - ais_url
+  - cacert
+  - endpoint
   - model_uuid
+  - password
+  - subnet
+  - username
