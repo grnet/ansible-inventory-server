@@ -149,15 +149,16 @@ class JujuInventoryHandler(JujuRequestHandler):
             if not machine_data['ip_addresses']:
                 continue
 
-            address = machine_data['ip_addresses'][0]
-
+            name = machine_data['name']
             for app in machine_data['apps']:
                 if app not in result:
                     result[app] = {'hosts': []}
                     result[status.model.name]['children'].append(app)
 
-                result[app]['hosts'].append(address)
-                result['_meta']['hostvars'][address] = {}
+                result[app]['hosts'].append(name)
+                result['_meta']['hostvars'][name] = {
+                    'ansible_host': machine_data['ip_addresses'][0],
+                }
 
         return result
 
