@@ -1,14 +1,10 @@
-FROM python:3-alpine
-MAINTAINER Stamatis Katsaounis "skatsaounis@admin.grnet.gr"
+FROM python:3.6-slim-buster
 
-ARG BRANCH=master
+ARG VERSION=1.1.2
 
-RUN apk --no-cache add --virtual .build-deps --update \
-        git \
-        gcc \
-        make \
-        libffi-dev \
-        openssl-dev \
-        musl-dev && \
-    pip3 install --no-cache-dir git+git://github.com/grnet/ansible-inventory-server.git@$BRANCH && \
-    apk del .build-deps
+COPY ansible_inventory_server /app/ansible_inventory_server/
+COPY setup.cfg setup.py requirements.txt README.md /app/
+
+ENV PBR_VERSION=$VERSION
+
+RUN pip3 install --no-cache-dir /app
