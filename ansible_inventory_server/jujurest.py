@@ -35,6 +35,7 @@ async def get_juju_model(parameters):
             password=parameters['juju']['password'],
             uuid=parameters['juju']['model_uuid'],
             endpoint=parameters['juju']['endpoint'],
+            max_frame_size=2 ** 27,
         )
     except (JujuError, KeyError):
         pass
