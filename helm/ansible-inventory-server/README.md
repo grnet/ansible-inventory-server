@@ -23,14 +23,3 @@ $ helm uninstall my-release
 ```
 
 The command removes all the Kubernetes components associated with the chart and deletes the release.
-
-## Parameters
-
-The following tables lists the configurable parameters of the Ansible Inventory Server chart and their default values.
-
-| Variable            | Description                                 | Default                                                  |
-| ------------------- | ------------------------------------------- | -------------------------------------------------------- |
-| `image.repository`  | Ansible Inventory Server Image name         | `cloudeng/ansible-inventory-server`                      |
-| `image.tag`         | Ansible Inventory Server Image tag          | `{TAG_NAME}`                                             |
-| `image.pullPolicy`  | Ansible Inventory Server Image pull policy  | `IfNotPresent`                                           |
-| `image.pullSecrets` | Ansible Inventory Server Image pull secrets | `nil` (does not add image pull secrets to deployed pods) |
