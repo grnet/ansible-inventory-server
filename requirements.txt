@@ -1,4 +1,4 @@
-PyYAML==5.3.1
+PyYAML==5.4
 tornado==6.0.2
 juju==2.8.1
 python-libmaas==0.6.5
